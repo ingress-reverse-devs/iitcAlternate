@@ -15,7 +15,10 @@ import java.util.List;
 
 
 
+
+
 import javax.faces.bean.ManagedBean;
+import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.RequestScoped;
 
 import org.json.simple.JSONArray;
@@ -39,13 +42,13 @@ public class RequestMessage
 		this.message = new ArrayList<Message>();
 	}
 	
-	public void startRequestMessage(String lat, String lng, String zoom, String zahl) throws IllegalStateException, ParseException 
+	public void startRequestMessage(String centerlat,String centerlng, String minlat,String minlng,String maxlat,String maxlng,String zoom,String zahl, String type) throws IllegalStateException, ParseException 
 	{		
 		this.message = new ArrayList<Message>();
 		
 		Connect con =  new Connect();
 
-		Object obj = con.startRequest(con.PAGINATEDPLEXTSV2, lat, lng, zoom, zahl);
+		Object obj = con.startRequest(con.PAGINATEDPLEXTSV2, centerlat, centerlng, minlat, minlng, maxlat, maxlng, zoom, zahl);
 		
 		JSONObject jsonObject = (JSONObject) obj;		
 		
@@ -57,13 +60,16 @@ public class RequestMessage
 		
 		while (iterator.hasNext()) {
 			
-			message.add(parseMessage(iterator.next()));
+			Message msg = parseMessage(iterator.next(), type);
+			
+			if(msg != null)
+				message.add(msg);
 		}	
 		
 	}
 	
 	
-	private Message parseMessage(JSONArray obj)
+	private Message parseMessage(JSONArray obj, String type)
 	{
 		Message msg = new Message();
 		
@@ -86,6 +92,12 @@ public class RequestMessage
 		
 		msg.setText((String) plext.get("text"));
 		
+		
+		if(type != null) 
+			if(type.equals(msg.getPlextType()))
+				return msg;
+			else
+				return null;
 		
 		return msg;
 	}

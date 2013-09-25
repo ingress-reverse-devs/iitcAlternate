@@ -30,13 +30,13 @@ public class RequestPortal {
 		this.portal = new ArrayList<Portal>();
 	}
 	
-	public List<Portal> startRequestPortal(String lat, String lng, String zoom) throws IllegalStateException, ParseException 
+	public List<Portal> startRequestPortal(String centerlat,String centerlng, String minlat,String minlng,String maxlat,String maxlng,String zoom) throws IllegalStateException, ParseException 
 	{		
 		this.portal = new ArrayList<Portal>();
 		
 		Connect con =  new Connect();
 
-		Object obj = con.startRequest(con.THINNEDENTITIESV4, lat, lng, zoom, "0");
+		Object obj = con.startRequest(con.THINNEDENTITIESV4,centerlat, centerlng, minlat, minlng, maxlat, maxlng, zoom, "0");
 		
 		JSONObject jsonObject = (JSONObject) obj;		
 		

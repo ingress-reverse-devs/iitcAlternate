@@ -11,16 +11,17 @@
  
     		<ui:define name="content">
     		
-    		<h:form id="screen">    
+    		 
     			<p:growl id="messages" showDetail="true" life="2000" />
     			
 	    		<f:view contentType="text/html">
+	    		<h:form id="screen">   
 	    			<p:gmap center="#{map.centerPosition}" zoom="#{map.zoomLevel}" type="HYBRID" streetView="false" id="map" styleClass="map" disableDefaultUI="true" model="#{map.portalModel}">
-	    				<p:ajax event="stateChange" listener="#{map.onStateChange}" update="@form"/>  
+	    				<p:ajax event="stateChange" listener="#{map.onStateChange}" update="screen:msgTable"/>  
 	    			</p:gmap>  
 	    			
 	    			<div id="msg">				
-		    			<p:dataTable value="#{RequestMessage.message}" var="message" emptyMessage="keine Nachrichten vorhanden"
+		    			<p:dataTable  id="msgTable" value="#{RequestMessage.message}" var="message" emptyMessage="keine Nachrichten vorhanden"
 		    						  scrollable="true" scrollHeight="250" >			    				
 		    				<p:column width="150">  
 					            <h:outputText value="#{message.timestamp}" >
@@ -33,9 +34,9 @@
 		    			</p:dataTable>	
 		    			<p:inputText value="#{SendMessage.message}"/><p:commandButton value="Senden" actionListener="#{SendMessage.startSendMessage(map.centerLat,map.centerLng)}" ajax="true" update="@form"/>  
 		    		</div>    
-	    						
+	    		</h:form>		
     			</f:view>
-    		</h:form>
+    		
     		</ui:define>
     		
     	</ui:composition>

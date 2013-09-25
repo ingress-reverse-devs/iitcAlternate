@@ -19,7 +19,9 @@ import org.primefaces.model.map.LatLngBounds;
 import org.primefaces.model.map.MapModel;
 import org.primefaces.model.map.Marker;
 
+import de.soft4media.iitc.connect.Connect;
 import de.soft4media.iitc.db.Portal;
+import de.soft4media.iitc.db.Message;
 import de.soft4media.iitc.json.request.RequestMessage;
 import de.soft4media.iitc.json.request.RequestPortal;
 
@@ -39,8 +41,23 @@ public class Map implements Serializable {
 	
 
 	private String zoomLevel = "13";
+	public String getZoomLevel() {
+		return zoomLevel;
+	}
+
+	public void setZoomLevel(String zoomLevel) {
+		this.zoomLevel = zoomLevel;
+	}
+
 	private String centerLat = "51.340000";
 	private String centerLng = "12.360000";
+	
+	private String minLng = "";
+	private String maxLng = "";
+	
+	private String minLat = "";
+	private String maxLat = "";
+	
 	
 	private MapModel portalModel;
 	List<Portal> portals;
@@ -54,6 +71,12 @@ public class Map implements Serializable {
 		this.portalModel = portalModel;
 	}
 
+	public String getCenterPosition()
+	{
+		return centerLat+","+centerLng;
+		
+	}
+	
 	public Map()
 	{
 		setMapModel();
@@ -65,23 +88,28 @@ public class Map implements Serializable {
         int zoomLevel = event.getZoomLevel();  
          
         this.zoomLevel = String.valueOf(zoomLevel);
-        this.centerLat = event.getCenter().getLat()+"";
-        this.centerLng = event.getCenter().getLng()+"";
+        this.centerLat = event.getCenter().getLat() + "";
+        this.centerLng = event.getCenter().getLng() + "";
         
+        this.minLat = bounds.getSouthWest().getLat() +"";
+        this.maxLat = bounds.getNorthEast().getLat() +"";
+        
+        this.minLng = bounds.getSouthWest().getLng() +"";
+        this.maxLng = bounds.getNorthEast().getLng() +"";
         
         requestMessage();
-        requestPortal();
+        //requestPortal();
         
     }  
 	
 	private void requestMessage() throws IllegalStateException, ParseException 
 	{
-		this.requestMessage.startRequestMessage(centerLat, centerLng, zoomLevel, "20");		
+		this.requestMessage.startRequestMessage(this.centerLat, this.centerLng, this.minLat, this.minLng, this.maxLat, this.maxLng, zoomLevel, "1000", "PLAYER_GENERATED");		
 	}
 
 	private void requestPortal() throws IllegalStateException, ParseException
 	{	
-		portals = this.requestPortal.startRequestPortal(centerLat, centerLng, zoomLevel);
+		portals = this.requestPortal.startRequestPortal(this.centerLat, this.centerLng, this.minLat, this.minLng, this.maxLat, this.maxLng, zoomLevel);
 		
 		setMapModel();
 	}
@@ -108,19 +136,22 @@ public class Map implements Serializable {
 		}
        
 	}
+
 	
-	public String getCenterPosition()
-	{
-		return this.centerLat + "," + this.centerLng;
-	}	
-	
-	
-	public String getZoomLevel() {
-		return zoomLevel;
+	public RequestMessage getRequestMessage() {
+		return requestMessage;
 	}
 
-	public void setZoomLevel(String zoomLevel) {
-		this.zoomLevel = zoomLevel;
+	public void setRequestMessage(RequestMessage requestMessage) {
+		this.requestMessage = requestMessage;
+	}
+	
+	public RequestPortal getRequestPortal() {
+		return requestPortal;
+	}
+
+	public void setRequestPortal(RequestPortal requestPortal) {
+		this.requestPortal = requestPortal;
 	}
 
 	public String getCenterLat() {
@@ -137,22 +168,6 @@ public class Map implements Serializable {
 
 	public void setCenterLng(String centerLng) {
 		this.centerLng = centerLng;
-	} 
-	
-	public RequestMessage getRequestMessage() {
-		return requestMessage;
-	}
-
-	public void setRequestMessage(RequestMessage requestMessage) {
-		this.requestMessage = requestMessage;
-	}
-	
-	public RequestPortal getRequestPortal() {
-		return requestPortal;
-	}
-
-	public void setRequestPortal(RequestPortal requestPortal) {
-		this.requestPortal = requestPortal;
 	}
 
 }
