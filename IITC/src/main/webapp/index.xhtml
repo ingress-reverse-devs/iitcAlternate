@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+<h:body>
+
+		<ui:composition template="/template/common/commonLayout.xhtml">
+ 
+    		<ui:define name="content">
+    		
+    		<h:form id="screen">    
+    			<p:growl id="messages" showDetail="true" life="2000" />
+    			
+	    		<f:view contentType="text/html">
+	    			<p:gmap center="#{map.centerPosition}" zoom="#{map.zoomLevel}" type="HYBRID" streetView="false" id="map" styleClass="map" disableDefaultUI="true" model="#{map.portalModel}">
+	    				<p:ajax event="stateChange" listener="#{map.onStateChange}" update="@form"/>  
+	    			</p:gmap>  
+	    			
+	    			<div id="msg">				
+		    			<p:dataTable value="#{RequestMessage.message}" var="message" emptyMessage="keine Nachrichten vorhanden"
+		    						  scrollable="true" scrollHeight="250" >			    				
+		    				<p:column width="150">  
+					            <h:outputText value="#{message.timestamp}" >
+					            	<f:convertDateTime pattern="dd.MM. - HH:mm:ss" />
+					            </h:outputText>  
+					        </p:column>  			    				
+		    				<p:column>  
+					            <h:outputText value="#{message.text}" />  
+					        </p:column>  			    				
+		    			</p:dataTable>	
+		    			<p:inputText value="#{SendMessage.message}"/><p:commandButton value="Senden" actionListener="#{SendMessage.startSendMessage(map.centerLat,map.centerLng)}" ajax="true" update="@form"/>  
+		    		</div>    
+	    						
+    			</f:view>
+    		</h:form>
+    		</ui:define>
+    		
+    	</ui:composition>
+</h:body>
+</html>

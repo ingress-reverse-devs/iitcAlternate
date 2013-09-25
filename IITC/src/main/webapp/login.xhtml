@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml"
+	xmlns:f="http://java.sun.com/jsf/core"
+	xmlns:h="http://java.sun.com/jsf/html"
+	xmlns:ui="http://java.sun.com/jsf/facelets"
+	xmlns:p="http://primefaces.org/ui">
+<h:body>
+<ui:composition template="/template/common/commonLayout.xhtml">
+
+	<ui:define name="header">
+	</ui:define>
+	
+	<ui:define name="content">
+		<p:growl showDetail="true"/>
+		<h:form>
+			<p:panel header="Login" rendered="#{!index.loginTrue}">
+				
+				<p:panelGrid columns="2">
+					<p:outputLabel for="nutzer" value="Nutzer"/>
+					<p:inputText id="nutzer" value="#{index.loginNutzer}"/>
+					
+					<p:outputLabel for="pw" value="Passwort"/>
+					<p:inputText id="pw" value="#{index.loginPw}"/>
+				</p:panelGrid>		
+				<p:commandButton value="Absenden" action="#{index.login}" ajax="false"/>
+				
+			</p:panel>
+			
+			<p:panel header="Welcome" rendered="#{index.loginTrue}" >
+				
+				<p:commandButton value="Logout" action="#{index.logout}" ajax="false"/>
+				
+			</p:panel>
+		</h:form>
+   	</ui:define>
+   	
+   	<ui:define name="footer">
+	</ui:define>
+</ui:composition>
+</h:body>
+</html>
