@@ -1,15 +1,21 @@
 package de.soft4media.iitc.json.request;
 
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
 
+import org.apache.http.entity.StringEntity;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
+import org.primefaces.component.fieldset.Fieldset;
 
 import de.soft4media.iitc.connect.Connect;
 import de.soft4media.iitc.db.Message;
@@ -22,7 +28,8 @@ public class RequestPortal {
 
 
 	private List<Portal> portal;
-	
+	Map<String,Boolean> tiles;
+	Map<String,Boolean> queryTiles;
 
 
 	public RequestPortal()
@@ -30,33 +37,100 @@ public class RequestPortal {
 		this.portal = new ArrayList<Portal>();
 	}
 	
-	public List<Portal> startRequestPortal(String centerlat,String centerlng, String minlat,String minlng,String maxlat,String maxlng,String zoom) throws IllegalStateException, ParseException 
+	
+	public static int[] getTileNumber(final double lat, final double lon, final int zoom) 
+	{
+		int xtile = (int)Math.floor( (lon + 180) / 360 * (1<<zoom) ) ;
+		int ytile = (int)Math.floor( (1 - Math.log(Math.tan(Math.toRadians(lat)) + 1 / Math.cos(Math.toRadians(lat))) / Math.PI) / 2 * (1<<zoom) ) ;
+		return new int[]{ytile, xtile};
+	}
+
+	
+	public void buildQueryArray(int[] minYX, int[] maxYX, String zoom)
+	{		
+		tiles = new HashMap<String, Boolean>();
+		
+		int yLngSize = maxYX[0] - minYX[0];
+		int xLatSize = maxYX[1] - minYX[1];
+	
+		
+		for(int a = 0; a<=xLatSize; a++)
+		{
+			for(int b = 0; b<=yLngSize; b++)
+			{
+				tiles.put(zoom + "_" + (minYX[1]+a)+ "_" +(minYX[0]+b), false);
+			}
+			
+		}
+		
+		
+	}
+	
+	public List<Portal> startRequestPortal(String centerlat,String centerlng, String minlat,String minlng,String maxlat,String maxlng,String zoom) throws IllegalStateException, ParseException, UnsupportedEncodingException 
 	{		
 		this.portal = new ArrayList<Portal>();
 		
 		Connect con =  new Connect();
-
-		Object obj = con.startRequest(con.THINNEDENTITIESV4,centerlat, centerlng, minlat, minlng, maxlat, maxlng, zoom, "0");
 		
-		JSONObject jsonObject = (JSONObject) obj;		
+		int[] maxYX = getTileNumber(Double.parseDouble(minlat), Double.parseDouble(maxlng), Integer.parseInt(zoom));
+		int[] minYX = getTileNumber(Double.parseDouble(maxlat), Double.parseDouble(minlng), Integer.parseInt(zoom));
 		
-		JSONObject result = (JSONObject) jsonObject.get("result");
-		
-		JSONObject map = (JSONObject) result.get("map");
-		
-		JSONObject mapId = (JSONObject) map.get("15_17514_10923");
+		buildQueryArray(minYX, maxYX, zoom);
 		
 		
-		JSONArray deletedGameEntities = (JSONArray) mapId.get("deletedGameEntityGuids");
-		JSONArray gameEntities = (JSONArray) mapId.get("gameEntities");
-	
+		StringEntity input = null;
 		
-		Iterator<JSONArray> iterator = gameEntities.iterator();
+		int anzahl = 1;
+		queryTiles = new HashMap<String, Boolean>();
 		
-		while (iterator.hasNext()) {
+		for (Entry<String, Boolean> entry : tiles.entrySet()) 
+		{
+			if(anzahl < 5)
+			{
+				queryTiles.put(entry.getKey(), entry.getValue());
+				anzahl++;
+				continue;
+			}
 			
-			portal.add(parsePortal(iterator.next()));
-		}	
+			input = new StringEntity("{\"4kr3ofeptwgary2j\":\"dashboard.getThinnedEntitiesV4\",\"n27qzc8389kgakyv\":["
+						
+					+ "{\"39031qie1i4aq563\":\"" +  entry.getKey() + "\",\"bgxibcomzoto63sn\":\"" +  entry.getKey() +"\",\"pg98bwox95ly0ouu\":" + minlat + ",\"eib1bkq8znpwr0g7\":" + minlng + ",\"ilfap961rwdybv63\":" + maxlat + ",\"lpf7m1ifx0ieouzq\":" + maxlng + "}"
+					+ "{\"39031qie1i4aq563\":\"" +  entry.getKey() + "\",\"bgxibcomzoto63sn\":\"" +  entry.getKey() +"\",\"pg98bwox95ly0ouu\":" + minlat + ",\"eib1bkq8znpwr0g7\":" + minlng + ",\"ilfap961rwdybv63\":" + maxlat + ",\"lpf7m1ifx0ieouzq\":" + maxlng + "}"
+					+ "{\"39031qie1i4aq563\":\"" +  entry.getKey() + "\",\"bgxibcomzoto63sn\":\"" +  entry.getKey() +"\",\"pg98bwox95ly0ouu\":" + minlat + ",\"eib1bkq8znpwr0g7\":" + minlng + ",\"ilfap961rwdybv63\":" + maxlat + ",\"lpf7m1ifx0ieouzq\":" + maxlng + "}"
+					+ "{\"39031qie1i4aq563\":\"" +  entry.getKey() + "\",\"bgxibcomzoto63sn\":\"" +  entry.getKey() +"\",\"pg98bwox95ly0ouu\":" + minlat + ",\"eib1bkq8znpwr0g7\":" + minlng + ",\"ilfap961rwdybv63\":" + maxlat + ",\"lpf7m1ifx0ieouzq\":" + maxlng + "}"					
+										
+					+ "]}");
+			
+			
+			Object obj = con.startRequest(con.THINNEDENTITIESV4, input);
+			
+			//setzt tile auf positive rückmeldung
+			if(obj != null)
+				tiles.put(entry.getKey(), true);
+			else
+				continue;
+			
+			JSONObject jsonObject = (JSONObject) obj;		
+			
+			JSONObject result = (JSONObject) jsonObject.get("result");
+			
+			JSONObject map = (JSONObject) result.get("map");
+			
+			JSONObject mapId = (JSONObject) map.get(entry.getKey());
+			
+			
+			JSONArray deletedGameEntities = (JSONArray) mapId.get("deletedGameEntityGuids");
+			JSONArray gameEntities = (JSONArray) mapId.get("gameEntities");
+		
+			
+			Iterator<JSONArray> iterator = gameEntities.iterator();
+			
+			while (iterator.hasNext()) {
+				
+				portal.add(parsePortal(iterator.next()));
+			}	
+		
+		}
 		
 		return portal;
 	}

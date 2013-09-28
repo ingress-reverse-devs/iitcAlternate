@@ -40,7 +40,7 @@ public class Map implements Serializable {
 	
 	
 
-	private String zoomLevel = "13";
+	private String zoomLevel = "16";
 	public String getZoomLevel() {
 		return zoomLevel;
 	}
@@ -97,8 +97,8 @@ public class Map implements Serializable {
         this.minLng = bounds.getSouthWest().getLng() +"";
         this.maxLng = bounds.getNorthEast().getLng() +"";
         
-        requestMessage();
-        //requestPortal();
+        //requestMessage();
+        requestPortal();
         
     }  
 	

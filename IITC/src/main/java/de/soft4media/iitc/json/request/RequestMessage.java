@@ -48,7 +48,7 @@ public class RequestMessage
 		
 		Connect con =  new Connect();
 
-		Object obj = con.startRequest(con.PAGINATEDPLEXTSV2, centerlat, centerlng, minlat, minlng, maxlat, maxlng, zoom, zahl);
+		Object obj = con.startRequest(con.PAGINATEDPLEXTSV2, centerlat, centerlng, minlat, minlng, maxlat, maxlng, zoom, zahl, null);
 		
 		JSONObject jsonObject = (JSONObject) obj;		
 		
