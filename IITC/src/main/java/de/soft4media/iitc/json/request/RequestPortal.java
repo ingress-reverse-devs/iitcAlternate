@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.RequestScoped;
+import javax.faces.bean.SessionScoped;
 
 import org.apache.http.entity.StringEntity;
 import org.json.simple.JSONArray;
@@ -23,13 +24,14 @@ import de.soft4media.iitc.db.Portal;
 
 
 @ManagedBean(name="RequestPortal")
-@RequestScoped
+@SessionScoped
 public class RequestPortal {
 
 
 	private List<Portal> portal;
 	Map<String,Boolean> tiles;
-	Map<String,Boolean> queryTiles;
+	StringBuilder queryTiles;
+	Map<String,Boolean> queryTilesNumber;
 
 
 	public RequestPortal()
@@ -75,34 +77,60 @@ public class RequestPortal {
 		int[] maxYX = getTileNumber(Double.parseDouble(minlat), Double.parseDouble(maxlng), Integer.parseInt(zoom));
 		int[] minYX = getTileNumber(Double.parseDouble(maxlat), Double.parseDouble(minlng), Integer.parseInt(zoom));
 		
+		minlat = minlat.replace(".", "").substring(0,8);
+		maxlat = maxlat.replace(".", "").substring(0,8);
+		minlng = minlng.replace(".", "").substring(0,8);
+		maxlng = maxlng.replace(".", "").substring(0,8);
+		
 		buildQueryArray(minYX, maxYX, zoom);
 		
 		
 		StringEntity input = null;
 		
-		int anzahl = 1;
-		queryTiles = new HashMap<String, Boolean>();
+		int anzahl = 0;
+		int count = 0;
 		
 		for (Entry<String, Boolean> entry : tiles.entrySet()) 
 		{
+			if(anzahl == 0)				
+			{
+				queryTiles = new StringBuilder("{\"4kr3ofeptwgary2j\":\"dashboard.getThinnedEntitiesV4\",\"n27qzc8389kgakyv\":[");
+				queryTilesNumber = new HashMap<String, Boolean>();
+			}
+				
 			if(anzahl < 5)
 			{
-				queryTiles.put(entry.getKey(), entry.getValue());
+				queryTiles.append("{\"39031qie1i4aq563\":\"" +  entry.getKey() + "\",\"bgxibcomzoto63sn\":\"" +  entry.getKey() +"\",\"pg98bwox95ly0ouu\":" + minlat + ",\"eib1bkq8znpwr0g7\":" + minlng + ",\"ilfap961rwdybv63\":" + maxlat + ",\"lpf7m1ifx0ieouzq\":" + maxlng + "}");
+				queryTilesNumber.put(entry.getKey(), entry.getValue());
+				
 				anzahl++;
-				continue;
+				count++;
+				
+				if(anzahl < 4)
+				{
+					
+					
+					if(count == tiles.size()-1)
+					{
+						System.out.println("last tile");
+					}
+					else
+					{
+						queryTiles.append(",");
+						continue;
+					}
+				}
 			}
 			
-			input = new StringEntity("{\"4kr3ofeptwgary2j\":\"dashboard.getThinnedEntitiesV4\",\"n27qzc8389kgakyv\":["
+			
 						
-					+ "{\"39031qie1i4aq563\":\"" +  entry.getKey() + "\",\"bgxibcomzoto63sn\":\"" +  entry.getKey() +"\",\"pg98bwox95ly0ouu\":" + minlat + ",\"eib1bkq8znpwr0g7\":" + minlng + ",\"ilfap961rwdybv63\":" + maxlat + ",\"lpf7m1ifx0ieouzq\":" + maxlng + "}"
-					+ "{\"39031qie1i4aq563\":\"" +  entry.getKey() + "\",\"bgxibcomzoto63sn\":\"" +  entry.getKey() +"\",\"pg98bwox95ly0ouu\":" + minlat + ",\"eib1bkq8znpwr0g7\":" + minlng + ",\"ilfap961rwdybv63\":" + maxlat + ",\"lpf7m1ifx0ieouzq\":" + maxlng + "}"
-					+ "{\"39031qie1i4aq563\":\"" +  entry.getKey() + "\",\"bgxibcomzoto63sn\":\"" +  entry.getKey() +"\",\"pg98bwox95ly0ouu\":" + minlat + ",\"eib1bkq8znpwr0g7\":" + minlng + ",\"ilfap961rwdybv63\":" + maxlat + ",\"lpf7m1ifx0ieouzq\":" + maxlng + "}"
-					+ "{\"39031qie1i4aq563\":\"" +  entry.getKey() + "\",\"bgxibcomzoto63sn\":\"" +  entry.getKey() +"\",\"pg98bwox95ly0ouu\":" + minlat + ",\"eib1bkq8znpwr0g7\":" + minlng + ",\"ilfap961rwdybv63\":" + maxlat + ",\"lpf7m1ifx0ieouzq\":" + maxlng + "}"					
-										
-					+ "]}");
+				
+			queryTiles.append("]}");
 			
 			
-			Object obj = con.startRequest(con.THINNEDENTITIESV4, input);
+			input = new StringEntity(queryTiles.toString());
+			
+			Object obj = con.startRequest(con.THINNEDENTITIESV4, input, centerlat, centerlng, zoom);
 			
 			//setzt tile auf positive rückmeldung
 			if(obj != null)
@@ -116,19 +144,34 @@ public class RequestPortal {
 			
 			JSONObject map = (JSONObject) result.get("map");
 			
-			JSONObject mapId = (JSONObject) map.get(entry.getKey());
 			
+			for (Entry<String, Boolean> tileNumber : queryTilesNumber.entrySet()) 
+			{		
 			
-			JSONArray deletedGameEntities = (JSONArray) mapId.get("deletedGameEntityGuids");
-			JSONArray gameEntities = (JSONArray) mapId.get("gameEntities");
-		
-			
-			Iterator<JSONArray> iterator = gameEntities.iterator();
-			
-			while (iterator.hasNext()) {
+				JSONObject mapId = (JSONObject) map.get(tileNumber.getKey());
 				
-				portal.add(parsePortal(iterator.next()));
-			}	
+				
+				JSONArray deletedGameEntities = (JSONArray) mapId.get("deletedGameEntityGuids");
+				JSONArray gameEntities = (JSONArray) mapId.get("gameEntities");
+			
+				
+				if(gameEntities != null)
+				{
+					
+					Iterator<JSONArray> iterator = gameEntities.iterator();
+					
+					while (iterator.hasNext()) {
+						
+						Portal parsedPortal = null;
+						
+						if((parsedPortal = parsePortal(iterator.next())) != null)
+							portal.add(parsedPortal);
+					}
+				}
+			}
+			
+			
+			anzahl = 0;
 		
 		}
 		
@@ -147,6 +190,17 @@ public class RequestPortal {
 		
 		JSONObject payload = (JSONObject)jsonArr.get(2);
 		
+		JSONObject captured = (JSONObject) payload.get("captured");
+		if(captured != null)
+		{
+			portal.setCapturedTime(captured.get("capturedTime").toString());
+			portal.setCapturingPlayerId(captured.get("capturingPlayerId").toString());
+		}
+		else 
+			return null;
+		
+		
+		
 		JSONObject controllingTeam = (JSONObject) payload.get("controllingTeam");
 		portal.setControllingTeam(controllingTeam.get("team").toString());
 		
@@ -162,13 +216,6 @@ public class RequestPortal {
 		
 		JSONObject resonatorArray = (JSONObject) payload.get("resonatorArray");
 		portal.setResonatorArray(locationE6 != null ?  (JSONArray) resonatorArray.get("resonators"): new JSONArray());
-		
-		JSONObject captured = (JSONObject) payload.get("captured");
-		if(captured != null)
-		{
-			portal.setCapturedTime(captured.get("capturedTime").toString());
-			portal.setCapturingPlayerId(captured.get("capturingPlayerId").toString());
-		}
 		
 		JSONObject portalV2 = (JSONObject) payload.get("portalV2");
 		if(portalV2 != null)

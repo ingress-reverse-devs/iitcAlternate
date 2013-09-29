@@ -28,7 +28,7 @@ public class Connect {
 	
 	
 	
-	public Object startRequest(String query, StringEntity input) throws IllegalStateException, org.json.simple.parser.ParseException
+	public Object startRequest(String query, StringEntity input, String centerLat, String centerLng, String zoom) throws IllegalStateException, org.json.simple.parser.ParseException
 	{
 			this.QUERY = query;
 
@@ -39,18 +39,11 @@ public class Connect {
 				DefaultHttpClient httpClient = new DefaultHttpClient();
 				HttpPost postRequest = new HttpPost("http://www.ingress.com/r/" + this.QUERY);
 		 
-				StringEntity input = null; 
 				
 				if(this.QUERY.equals(this.GAMESCORE))
 					input = new StringEntity("{\"4kr3ofeptwgary2j\":\"dashboard.getGameScore\"}");
-				
-				if(this.QUERY.equals(this.PAGINATEDPLEXTSV2))
-					input = new StringEntity("{\"4kr3ofeptwgary2j\":\"dashboard.getPaginatedPlextsV2\",\"tmb0vgxgp5grsnhp\":" + zahl + ",\"pg98bwox95ly0ouu\":" + minlat + ",\"eib1bkq8znpwr0g7\":" + minlng + ",\"ilfap961rwdybv63\":" + maxlat + ",\"lpf7m1ifx0ieouzq\":" + maxlng + ",\"hljqffkpwlx0vtjt\":" + System.currentTimeMillis() + ",\"sw317giy6x2xj9zm\":-1,\"hljqffkpwlx0vtjt\":-1,\"0dvtbatgzcfccchh\":false}");
-				
-				if(this.QUERY.equals(this.THINNEDENTITIESV4))
-					input = new StringEntity("{\"4kr3ofeptwgary2j\":\"dashboard.getThinnedEntitiesV4\",\"n27qzc8389kgakyv\":[{\"39031qie1i4aq563\":\"" + tileNumber + "\",\"bgxibcomzoto63sn\":\"" + tileNumber +"\",\"pg98bwox95ly0ouu\":" + minlat + ",\"eib1bkq8znpwr0g7\":" + minlng + ",\"ilfap961rwdybv63\":" + maxlat + ",\"lpf7m1ifx0ieouzq\":" + maxlng + "}]}");
-				
-				
+
+	
 				input.setContentType("application/json");
 			
 				
@@ -64,7 +57,7 @@ public class Connect {
 		 
 				if (response.getStatusLine().getStatusCode() != 200) {
 					
-					System.out.println("Abruf Fehlschlag Tile: " + tileNumber);
+					System.out.println("Abruf Fehlschlag Tile: ");
 					
 					return obj;
 				}

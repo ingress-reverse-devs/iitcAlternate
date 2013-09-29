@@ -17,7 +17,16 @@
 	    		<f:view contentType="text/html">
 	    		<h:form id="screen">   
 	    			<p:gmap center="#{map.centerPosition}" zoom="#{map.zoomLevel}" type="HYBRID" streetView="false" id="map" styleClass="map" disableDefaultUI="true" model="#{map.portalModel}">
-	    				<p:ajax event="stateChange" listener="#{map.onStateChange}" update="screen:msgTable"/>  
+	    				<p:ajax event="stateChange" listener="#{map.onStateChange}" update="screen:msgTable @this"/>  
+	    				 <p:ajax event="overlaySelect" listener="#{map.onCircleSelect}" /> 
+	    				 
+	    				 <p:gmapInfoWindow>  
+				            <p:outputPanel style="text-align:center;display:block;margin:auto:"> 	
+				            	<p:graphicImage value="#{map.selectedCircle.data[1]}" height="150"/>  
+                    			<br />  			  
+				            	<h:outputText value="#{map.selectedCircle.data[0]}" /> 				  
+				            </p:outputPanel>  				  
+				        </p:gmapInfoWindow>  
 	    			</p:gmap>  
 	    			
 	    			<div id="msg">				
